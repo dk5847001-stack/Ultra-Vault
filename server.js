@@ -29,6 +29,10 @@ app.use("/auth/login", loginLimiter);
 app.use("/auth", authRoutes);
 app.use("/api/credentials", credentialRoutes);
 
+app.get("/", (req, res) => {
+  res.send("🚀 Ultra-Vault API is running successfully!");
+});
+
 // 🌍 MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
