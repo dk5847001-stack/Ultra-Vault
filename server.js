@@ -25,6 +25,7 @@ const loginLimiter = rateLimit({
 
 app.use("/auth/login", loginLimiter);
 
+
 // ✅ Routes
 app.use("/auth", authRoutes);
 app.use("/api/credentials", credentialRoutes);
