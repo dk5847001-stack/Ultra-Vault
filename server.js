@@ -31,17 +31,48 @@ app.set("trust proxy", 1);
 app.use(helmet());
 
 /* =======================================================
-   🌍 CORS (SAFE)
+   🌍 CORS (RENDER + LOCAL SAFE)
+   - Allow: localhost + Render frontend
+   - Use ENV:
+        CLIENT_URL=https://xxxx.onrender.com
+        OR
+        CLIENT_URLS=https://a.onrender.com,https://b.onrender.com
 ======================================================= */
+const defaultAllowedOrigins = ["http://localhost:3000"];
+
+const envOrigins = [
+  process.env.CLIENT_URL, // single
+  ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(",") : []), // multiple
+]
+  .map((s) => (s || "").trim())
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(
+  new Set([...defaultAllowedOrigins, ...envOrigins])
+);
+
+console.log("✅ CORS allowed origins:", allowedOrigins);
+
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: function (origin, callback) {
+    // allow requests with no origin (Postman, curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.log("❌ CORS blocked origin:", origin);
+    return callback(new Error("Not allowed by CORS"));
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
+// preflight
+app.options("*", cors(corsOptions));
 
 /* =======================================================
    BODY PARSER
@@ -130,3 +161,17 @@ mongoose
       console.log("=====================================");
     });
   });
+
+/* =======================================================
+   ✅ OPTIONAL: Better error msg for CORS failures
+======================================================= */
+app.use((err, req, res, next) => {
+  if (err && err.message && err.message.includes("CORS")) {
+    return res.status(403).json({
+      success: false,
+      message: "CORS blocked this request",
+      origin: req.headers.origin || null,
+    });
+  }
+  next(err);
+});
