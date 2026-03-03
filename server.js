@@ -9,39 +9,75 @@ const rateLimit = require("express-rate-limit");
 const authRoutes = require("./routes/authRoutes");
 const credentialRoutes = require("./routes/credentialRoutes");
 
-const app = express(); // ✅ App define FIRST
+const app = express();
 
-// 🔐 Security Middlewares
+/* =======================================================
+   🔐 TRUST PROXY (IMPORTANT FOR RENDER / EXPRESS-RATE-LIMIT)
+======================================================= */
+app.set("trust proxy", 1);
+
+/* =======================================================
+   🔐 SECURITY MIDDLEWARES
+======================================================= */
 app.use(helmet());
-app.use(cors());
+
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "*",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// 🔒 Rate Limiter for Login
+
+/* =======================================================
+   🔒 RATE LIMITER (LOGIN PROTECTION)
+======================================================= */
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000, // 15 min
   max: 10,
-  message: "Too many login attempts. Try again later."
+  message: {
+    success: false,
+    message: "Too many login attempts. Please try again later.",
+  },
 });
 
 app.use("/auth/login", loginLimiter);
 
-
-// ✅ Routes
+/* =======================================================
+   🚀 ROUTES
+======================================================= */
 app.use("/auth", authRoutes);
 app.use("/api/credentials", credentialRoutes);
 
 app.get("/", (req, res) => {
-  res.send("🚀 Ultra-Vault API is running successfully!");
+  res.status(200).json({
+    success: true,
+    message: "🚀 Ultra-Vault API is running successfully!",
+  });
 });
 
-// 🌍 MongoDB Connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log("❌ MongoDB Error:", err));
+/* =======================================================
+   🌍 DATABASE CONNECTION
+======================================================= */
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB Connection Error:", err.message);
+    process.exit(1); // Stop server if DB fails
+  });
 
-// 🚀 Dynamic PORT (RENDER REQUIRED)
+/* =======================================================
+   🚀 START SERVER
+======================================================= */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
+  console.log("=====================================");
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log("=====================================");
 });
