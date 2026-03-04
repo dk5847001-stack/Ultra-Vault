@@ -1,12 +1,13 @@
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 
-// 🔐 Ensure API key exists BEFORE creating instance
-if (!process.env.RESEND_API_KEY) {
-  console.error("❌ RESEND_API_KEY is missing in .env");
-  throw new Error("RESEND_API_KEY is missing in environment variables");
-}
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+// transporter create
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS,
+  },
+});
 
 /**
  * sendEmail({ email, subject, message })
@@ -14,25 +15,17 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  */
 const sendEmail = async ({ email, subject, message }) => {
   try {
-    const FROM_EMAIL =
-      process.env.RESEND_FROM || "onboarding@resend.dev";
-
-    const response = await resend.emails.send({
-      from: `Ultra Vault <${FROM_EMAIL}>`,
+    const info = await transporter.sendMail({
+      from: `Ultra Vault <${process.env.GMAIL_USER}>`,
       to: email,
-      subject,
+      subject: subject,
       html: message,
     });
 
-    if (response.error) {
-      console.error("Resend Error:", response.error);
-      throw new Error(response.error.message || "Email failed");
-    }
-
-    console.log("✅ Email sent successfully");
-    return response;
+    console.log("✅ Email sent:", info.messageId);
+    return info;
   } catch (err) {
-    console.error("❌ sendEmail Error:", err.message);
+    console.error("❌ Email send error:", err.message);
     throw err;
   }
 };
