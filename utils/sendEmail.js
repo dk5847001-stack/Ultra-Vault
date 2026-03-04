@@ -1,18 +1,15 @@
 const nodemailer = require("nodemailer");
 
-// transporter create
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587, // 465 ki jagah 587
+  secure: false, // STARTTLS use hoga
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS,
   },
 });
 
-/**
- * sendEmail({ email, subject, message })
- * message = HTML string
- */
 const sendEmail = async ({ email, subject, message }) => {
   try {
     const info = await transporter.sendMail({
