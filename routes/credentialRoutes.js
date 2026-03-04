@@ -16,7 +16,7 @@ const encryptPassword = (password) => {
 const decryptPassword = (encryptedPassword) => {
   const bytes = CryptoJS.AES.decrypt(
     encryptedPassword,
-    process.env.JWT_SECRET
+    process.env.ENC_SECRET
   );
   return bytes.toString(CryptoJS.enc.Utf8);
 };
