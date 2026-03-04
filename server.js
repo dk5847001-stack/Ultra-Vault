@@ -1,5 +1,5 @@
 require("dotenv").config();
-
+const subscriberRoutes = require("./routes/subscriberRoutes");
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -115,6 +115,7 @@ app.get("/ping", (req, res) => {
 ======================================================= */
 console.log("✅ mounting /auth routes...");
 app.use("/auth", authRoutes);
+app.use("/api/subscribers", subscriberRoutes);
 
 console.log("✅ mounting /api/credentials routes...");
 app.use("/api/credentials", credentialRoutes);
