@@ -7,7 +7,10 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
+    adminPaid: {
+      type: Boolean,
+      default: false
+       },
     email: {
       type: String,
       required: true,

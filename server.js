@@ -24,6 +24,12 @@ app.use(cors())
 const adminRoutes = require("./routes/adminRoutes");
 app.use("/api/admin", adminRoutes);
 
+const paymentRoutes = require("./routes/paymentRoutes");
+app.use("/api/pay", paymentRoutes);
+
+console.log("✅ mounting /api/admin routes...");
+console.log("✅ mounting /api/pay routes...");
+
 /* =======================================================
    🔐 TRUST PROXY
 ======================================================= */
