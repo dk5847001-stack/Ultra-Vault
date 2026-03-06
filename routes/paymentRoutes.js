@@ -224,7 +224,7 @@ doc
   .fillColor("#0f172a")
   .font("Helvetica-Bold")
   .fontSize(24)
-  .text(`₹ ${Number(payment.amount || 0).toFixed(2)}`, pageWidth - 205, 190, {
+  .text(`INR ${Number(payment.amount || 0).toFixed(2)}`, pageWidth - 205, 190, {
     width: 110,
     align: "center",
   });
