@@ -131,32 +131,164 @@ router.get("/receipt/:paymentId", requireAuth, async (req, res) => {
       `attachment; filename=receipt-${payment.receiptNo}.pdf`
     );
 
-    const doc = new PDFDocument({ margin: 50 });
-    doc.pipe(res);
+    const doc = new PDFDocument({
+  size: "A4",
+  margin: 40,
+});
 
-    doc.fontSize(22).text("Ultra Vault", { align: "center" });
-    doc.moveDown(0.5);
-    doc.fontSize(14).text("Payment Receipt", { align: "center" });
-    doc.moveDown(2);
+doc.pipe(res);
 
-    doc.fontSize(12).text(`Receipt No: ${payment.receiptNo}`);
-    doc.text(`Payment ID: ${payment.razorpayPaymentId}`);
-    doc.text(`Order ID: ${payment.razorpayOrderId}`);
-    doc.text(`Name: ${payment.name}`);
-    doc.text(`Email: ${payment.email}`);
-    doc.text(`Plan: ${payment.plan}`);
-    doc.text(`Amount: ₹${payment.amount}`);
-    doc.text(`Currency: ${payment.currency}`);
-    doc.text(`Status: ${payment.status}`);
-    doc.text(`Date: ${new Date(payment.createdAt).toLocaleString()}`);
+const pageWidth = doc.page.width;
+const pageHeight = doc.page.height;
 
-    doc.moveDown(2);
-    doc.text("Thank you for your payment.", { align: "center" });
-    doc.text("Your Ultra Vault premium/admin access has been activated.", {
+// Background
+doc.rect(0, 0, pageWidth, pageHeight).fill("#f4f7fb");
+
+// Top header bar
+doc.rect(0, 0, pageWidth, 110).fill("#0f172a");
+
+// Brand icon box
+doc.roundedRect(45, 30, 42, 42, 10).fill("#2563eb");
+doc
+  .fillColor("#ffffff")
+  .fontSize(20)
+  .text("🔐", 55, 39, { width: 22, align: "center" });
+
+// Brand title
+doc
+  .fillColor("#ffffff")
+  .font("Helvetica-Bold")
+  .fontSize(24)
+  .text("Ultra Vault", 100, 34);
+
+doc
+  .font("Helvetica")
+  .fontSize(11)
+  .fillColor("#cbd5e1")
+  .text("Secure Payment Receipt", 101, 64);
+
+// Receipt tag
+doc.roundedRect(pageWidth - 165, 35, 120, 32, 16).fill("#1e293b");
+doc
+  .fillColor("#93c5fd")
+  .font("Helvetica-Bold")
+  .fontSize(11)
+  .text("PAYMENT SUCCESS", pageWidth - 155, 45, {
+    width: 100,
+    align: "center",
+  });
+
+// Main white card
+doc.roundedRect(35, 130, pageWidth - 70, 610, 20).fill("#ffffff");
+
+// Title inside card
+doc
+  .fillColor("#0f172a")
+  .font("Helvetica-Bold")
+  .fontSize(22)
+  .text("Payment Receipt", 55, 160);
+
+doc
+  .fillColor("#64748b")
+  .font("Helvetica")
+  .fontSize(11)
+  .text("This receipt confirms your successful Ultra Vault payment.", 55, 190);
+
+// Amount highlight card
+doc.roundedRect(pageWidth - 225, 150, 150, 80, 16).fill("#eff6ff");
+doc
+  .fillColor("#2563eb")
+  .font("Helvetica")
+  .fontSize(11)
+  .text("AMOUNT PAID", pageWidth - 195, 168, { width: 90, align: "center" });
+
+doc
+  .fillColor("#0f172a")
+  .font("Helvetica-Bold")
+  .fontSize(24)
+  .text(`₹${Number(payment.amount).toFixed(2)}`, pageWidth - 205, 190, {
+    width: 110,
+    align: "center",
+  });
+
+// Divider
+doc.moveTo(55, 250).lineTo(pageWidth - 55, 250).strokeColor("#e2e8f0").lineWidth(1).stroke();
+
+// Helper for label/value rows
+const drawRow = (label, value, y) => {
+  doc
+    .fillColor("#64748b")
+    .font("Helvetica-Bold")
+    .fontSize(11)
+    .text(label, 60, y, { width: 150 });
+
+  doc
+    .fillColor("#111827")
+    .font("Helvetica")
+    .fontSize(12)
+    .text(String(value || "-"), 200, y, { width: 320 });
+};
+
+// Left detail block
+drawRow("Receipt No", payment.receiptNo, 275);
+drawRow("Payment ID", payment.razorpayPaymentId, 305);
+drawRow("Order ID", payment.razorpayOrderId, 335);
+drawRow("Customer Name", payment.name, 365);
+drawRow("Email Address", payment.email, 395);
+drawRow("Plan", payment.plan, 425);
+drawRow("Currency", payment.currency, 455);
+drawRow("Status", payment.status.toUpperCase(), 485);
+drawRow("Paid On", new Date(payment.createdAt).toLocaleString(), 515);
+
+// Small status badge
+doc.roundedRect(pageWidth - 180, 470, 95, 30, 15).fill("#dcfce7");
+doc
+  .fillColor("#166534")
+  .font("Helvetica-Bold")
+  .fontSize(11)
+  .text("SUCCESS", pageWidth - 165, 480, {
+    width: 65,
+    align: "center",
+  });
+
+// Thank you box
+doc.roundedRect(55, 570, pageWidth - 110, 95, 16).fill("#f8fafc");
+doc
+  .fillColor("#0f172a")
+  .font("Helvetica-Bold")
+  .fontSize(14)
+  .text("Thank you for your payment!", 75, 595);
+
+doc
+  .fillColor("#475569")
+  .font("Helvetica")
+  .fontSize(11)
+  .text(
+    "Your Ultra Vault premium/admin access has been activated successfully. Please keep this receipt for your records.",
+    75,
+    620,
+    {
+      width: pageWidth - 150,
+      align: "left",
+      lineGap: 3,
+    }
+  );
+
+// Footer
+doc
+  .fillColor("#94a3b8")
+  .font("Helvetica")
+  .fontSize(9)
+  .text(
+    "Generated securely by Ultra Vault • This is a system-generated receipt.",
+    0,
+    pageHeight - 40,
+    {
       align: "center",
-    });
+    }
+  );
 
-    doc.end();
+doc.end();
   } catch (err) {
     console.error("Receipt PDF error:", err);
     return res.status(500).json({
